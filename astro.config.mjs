@@ -6,7 +6,8 @@ import { defineConfig, fontProviders } from "astro/config";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://www.azuridayo.ca/treasure-chest",
+  site: "https://www.azuridayo.ca",
+  base: '/treasure-chest',
   integrations: [mdx(), sitemap()],
   fonts: [
     {
