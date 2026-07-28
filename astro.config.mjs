@@ -3,14 +3,15 @@
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import { defineConfig, fontProviders } from "astro/config";
+import pagefind from "astro-pagefind";
 
 import react from "@astrojs/react";
 
 // https://astro.build/config
 export default defineConfig({
   site: "https://www.azuridayo.ca",
-  base: '/treasure-chest',
-  integrations: [mdx(), sitemap(), react()],
+  base: "/treasure-chest",
+  integrations: [mdx(), sitemap(), react(), pagefind()],
   fonts: [
     {
       provider: fontProviders.local(),
