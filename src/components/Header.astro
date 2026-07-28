@@ -1,15 +1,15 @@
 ---
-import { SITE_TITLE } from '../consts';
+import { SITE_TITLE, SITE_BASE } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 ---
 
 <header>
 	<nav>
-		<h2><a href="/">{SITE_TITLE}</a></h2>
+		<h2><a href={`${SITE_BASE}`}>{SITE_TITLE}</a></h2>
 		<div class="internal-links">
-			<HeaderLink href="/treasure-chest">Home</HeaderLink>
-			<HeaderLink href="/treasure-chest/blog">Blog</HeaderLink>
-			<HeaderLink href="/treasure-chest/about">About</HeaderLink>
+			<HeaderLink href={`${SITE_BASE}`}>Home</HeaderLink>
+			<HeaderLink href={`${SITE_BASE}/blog`}>Blog</HeaderLink>
+			<HeaderLink href={`${SITE_BASE}/about`}>About</HeaderLink>
 		</div>
 		<div class="social-links">
 			<a href="https://m.webtoo.ls/@astro" target="_blank">
