@@ -6,8 +6,9 @@ import Footer from "../../components/Footer.astro";
 import FormattedDate from "../../components/FormattedDate.astro";
 import Header from "../../components/Header.astro";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_BASE } from "../../consts";
+import { getCollectionPath, getCollectionPosts } from "../../utils/collection";
 
-const posts = (await getCollection("collection")).sort(
+const posts = getCollectionPosts(await getCollection("collection")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 ---
@@ -94,7 +95,7 @@ const posts = (await getCollection("collection")).sort(
           {
             posts.map((post) => (
               <li>
-                <a href={`${SITE_BASE}/collection/${post.id}/`}>
+                <a href={`${SITE_BASE}/collection/${getCollectionPath(post)}/`}>
                   {post.data.heroImage && (
                     <Image
                       width={720}
