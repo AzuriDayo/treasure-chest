@@ -1,0 +1,140 @@
+---
+import { Image } from "astro:assets";
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import FormattedDate from "../../components/FormattedDate.astro";
+import CollectionPost from "../../layouts/CollectionPost.astro";
+import { SITE_BASE } from "../../consts";
+import { getCollectionPath, getNestedPosts } from "../../utils/collection";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("collection");
+  return posts.map((post) => ({
+    params: { slug: getCollectionPath(post) },
+    props: { post, nestedPosts: getNestedPosts(posts, post) },
+  }));
+}
+type Props = {
+  post: CollectionEntry<"collection">;
+  nestedPosts: CollectionEntry<"collection">[];
+};
+
+const { post, nestedPosts } = Astro.props;
+const { Content } = await render(post);
+---
+
+<CollectionPost {...post.data}>
+  <Content />
+  {
+    nestedPosts.length > 0 && (
+      <section class="nested-posts">
+        <h2>Posts</h2>
+        <ul>
+          {nestedPosts.map((nestedPost) => (
+            <li>
+              <a href={SITE_BASE + "/collection/" + nestedPost.id + "/"}>
+                {nestedPost.data.heroImage && (
+                  <Image
+                    width={720}
+                    height={360}
+                    src={nestedPost.data.heroImage}
+                    alt=""
+                  />
+                )}
+                <h4 class="title">{nestedPost.data.title}</h4>
+                <p class="date">
+                  <FormattedDate date={nestedPost.data.pubDate} />
+                </p>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</CollectionPost>
+
+<style>
+  .nested-posts {
+    margin-top: 2rem;
+  }
+
+  .nested-posts ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nested-posts li {
+    width: calc(50% - 1rem);
+  }
+
+  .nested-posts li * {
+    text-decoration: none;
+    transition: 0.2s ease;
+  }
+
+  .nested-posts li:first-child {
+    width: 100%;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .nested-posts li:first-child img {
+    width: 100%;
+  }
+
+  .nested-posts li:first-child .title {
+    font-size: 2.369rem;
+  }
+
+  .nested-posts li img {
+    margin-bottom: 0.5rem;
+    border-radius: 12px;
+  }
+
+  .nested-posts li a {
+    display: block;
+  }
+
+  .nested-posts .title {
+    margin: 0;
+    color: rgb(var(--black));
+    line-height: 1;
+  }
+
+  .nested-posts .date {
+    margin: 0;
+    color: rgb(var(--gray));
+  }
+
+  .nested-posts li a:hover h4,
+  .nested-posts li a:hover .date {
+    color: rgb(var(--accent));
+  }
+
+  .nested-posts a:hover img {
+    box-shadow: var(--box-shadow);
+  }
+
+  @media (max-width: 720px) {
+    .nested-posts ul {
+      gap: 0.5em;
+    }
+
+    .nested-posts li {
+      width: 100%;
+      text-align: center;
+    }
+
+    .nested-posts li:first-child {
+      margin-bottom: 0;
+    }
+
+    .nested-posts li:first-child .title {
+      font-size: 1.563em;
+    }
+  }
+</style>
