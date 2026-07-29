@@ -8,15 +8,8 @@ import Header from "../components/Header.astro";
 
 type Props = CollectionEntry<"collection">["data"];
 
-const {
-  title,
-  description,
-  pubDate,
-  updatedDate,
-  heroImage,
-  subImages,
-  showDate = true,
-} = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, subImages } =
+  Astro.props;
 ---
 
 <html lang="en">
@@ -84,9 +77,9 @@ const {
         <div class="prose">
           <div class="title">
             <div class="date">
-              {showDate && <FormattedDate date={pubDate} />}
+              <FormattedDate date={pubDate} />
               {
-                updatedDate && showDate && (
+                updatedDate && (
                   <div class="last-updated-on">
                     Last updated on <FormattedDate date={updatedDate} />
                   </div>

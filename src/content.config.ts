@@ -17,6 +17,7 @@ const collection = defineCollection({
       subImages: z.optional(z.array(image())),
       tags: z.array(z.string()).optional(),
       categories: z.array(z.string()).optional(),
+      showDate: z.boolean().default(true).optional(),
     }),
 });
 
