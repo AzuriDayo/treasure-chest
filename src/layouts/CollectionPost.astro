@@ -308,7 +308,9 @@ const {
       import EmblaCarousel from "embla-carousel";
 
       document.querySelectorAll("[data-image-carousel]").forEach((carousel) => {
-        const viewport = carousel.querySelector("[data-embla-viewport]");
+        const viewport = carousel.querySelector<HTMLElement>(
+          "[data-embla-viewport]",
+        );
         if (!viewport) return;
 
         const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
@@ -317,9 +319,15 @@ const {
           "[data-carousel-previous]",
         );
         const nextButton = carousel.querySelector("[data-carousel-next]");
-        const popout = carousel.querySelector("[data-image-popout]");
-        const popoutImage = carousel.querySelector("[data-image-popout-image]");
-        const closeButton = carousel.querySelector("[data-image-popout-close]");
+        const popout = carousel.querySelector<HTMLDialogElement>(
+          "[data-image-popout]",
+        );
+        const popoutImage = carousel.querySelector<HTMLImageElement>(
+          "[data-image-popout-image]",
+        );
+        const closeButton = carousel.querySelector<HTMLButtonElement>(
+          "[data-image-popout-close]",
+        );
         const embla = EmblaCarousel(viewport, {
           align: "center",
           loop: slides.length > 1,
