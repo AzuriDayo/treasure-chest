@@ -37,6 +37,112 @@ const {
         border-radius: 12px;
         box-shadow: var(--box-shadow);
       }
+      .image-carousel {
+        width: 100%;
+        max-width: 1020px;
+        margin: 1.5rem auto 0;
+      }
+      .embla__viewport {
+        padding: 1rem 0;
+        overflow: hidden;
+      }
+      .embla__container {
+        display: flex;
+        margin-left: -1rem;
+        touch-action: pan-y pinch-zoom;
+      }
+      .embla__slide {
+        flex: 0 0 78%;
+        min-width: 0;
+        padding-left: 1rem;
+        opacity: 0.45;
+        transform: scale(0.93);
+        transition:
+          opacity 0.25s ease,
+          transform 0.25s ease;
+      }
+      .embla__slide.is-selected {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .carousel-image {
+        display: block;
+        width: 100%;
+        padding: 0;
+        cursor: zoom-in;
+        background: transparent;
+        border: 0;
+      }
+      .carousel-image img {
+        width: 100%;
+        border-radius: 12px;
+      }
+      .embla__slide.is-selected .carousel-image img {
+        box-shadow: 0 8px 24px rgba(var(--shadow-color), 35%);
+      }
+      .carousel-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 0.75rem;
+      }
+      .carousel-controls button,
+      .image-popout__close {
+        min-width: 7rem;
+        padding: 0.5rem 1rem;
+        color: white;
+        cursor: pointer;
+        background: var(--accent);
+        border: 2px solid var(--accent);
+        border-radius: 999px;
+        box-shadow: 0 2px 6px rgba(var(--shadow-color), 35%);
+        transition:
+          background 0.2s ease,
+          border-color 0.2s ease,
+          transform 0.2s ease;
+      }
+      .carousel-controls button:hover,
+      .image-popout__close:hover {
+        background: var(--accent-dark);
+        border-color: var(--accent-dark);
+        transform: translateY(-1px);
+      }
+      .carousel-position {
+        min-width: 4rem;
+        text-align: center;
+      }
+      .image-popout {
+        width: min(90vw, 1400px);
+        max-width: none;
+        max-height: 90vh;
+        padding: 0;
+        overflow: visible;
+        background: transparent;
+        border: 0;
+      }
+      .image-popout::backdrop {
+        background: rgba(0, 0, 0, 0.8);
+      }
+      .image-popout__close {
+        position: absolute;
+        top: -0.75rem;
+        right: -0.75rem;
+        z-index: 1;
+        width: 2.5rem;
+        height: 2.5rem;
+        min-width: 0;
+        padding: 0;
+        font-size: 1.5rem;
+        line-height: 1;
+      }
+      .image-popout__image {
+        display: block;
+        max-width: 100%;
+        max-height: 90vh;
+        margin: 0 auto;
+        border-radius: 12px;
+      }
       .prose {
         width: 720px;
         max-width: calc(100% - 2em);
@@ -60,6 +166,40 @@ const {
       .last-updated-on {
         font-style: italic;
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        .embla__slide,
+        .carousel-controls button,
+        .image-popout__close {
+          transition: none;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .embla__viewport {
+          padding: 0;
+        }
+
+        .embla__container {
+          margin-left: 0;
+        }
+
+        .embla__slide {
+          flex-basis: 100%;
+          padding-left: 0;
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+
+        .embla__slide.is-selected {
+          transform: none;
+        }
+
+        .embla__slide.is-selected .carousel-image img {
+          box-shadow: none;
+        }
+      }
     </style>
   </head>
 
@@ -75,10 +215,73 @@ const {
           }
           {
             subImages &&
-              subImages.map((image) => (
-                <Image width={1020} height={510} src={image} alt="" />
-                // these subImages will be changed to a carousel in the future
-              ))
+              subImages.length > 0 && (
+                <div class="image-carousel" data-image-carousel>
+                  <div class="embla__viewport" data-embla-viewport>
+                    <div class="embla__container">
+                      {subImages.map((image) => (
+                        <div class="embla__slide" data-carousel-slide>
+                          <button
+                            class="carousel-image"
+                            type="button"
+                            data-carousel-image
+                            aria-label="Open larger image"
+                          >
+                            <Image
+                              width={1020}
+                              height={510}
+                              src={image}
+                              alt=""
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {
+                    subImages.length > 1 && (
+                      <div class="carousel-controls">
+                        <button
+                          type="button"
+                          data-carousel-previous
+                          aria-label="Show previous image"
+                        >
+                          Previous
+                        </button>
+                        <span
+                          class="carousel-position"
+                          data-carousel-position
+                          aria-live="polite"
+                        >
+                          1 / {subImages.length}
+                        </span>
+                        <button
+                          type="button"
+                          data-carousel-next
+                          aria-label="Show next image"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )
+                  }
+                  <dialog class="image-popout" data-image-popout>
+                    <button
+                      class="image-popout__close"
+                      type="button"
+                      data-image-popout-close
+                      aria-label="Close enlarged image"
+                    >
+                      ×
+                    </button>
+                    <img
+                      class="image-popout__image"
+                      data-image-popout-image
+                      alt="Expanded carousel image"
+                    />
+                  </dialog>
+                </div>
+              )
           }
         </div>
         <div class="prose">
@@ -101,5 +304,73 @@ const {
       </article>
     </main>
     <Footer />
+    <script>
+      import EmblaCarousel from "embla-carousel";
+
+      document.querySelectorAll("[data-image-carousel]").forEach((carousel) => {
+        const viewport = carousel.querySelector<HTMLElement>(
+          "[data-embla-viewport]",
+        );
+        if (!viewport) return;
+
+        const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
+        const position = carousel.querySelector("[data-carousel-position]");
+        const previousButton = carousel.querySelector(
+          "[data-carousel-previous]",
+        );
+        const nextButton = carousel.querySelector("[data-carousel-next]");
+        const popout = carousel.querySelector<HTMLDialogElement>(
+          "[data-image-popout]",
+        );
+        const popoutImage = carousel.querySelector<HTMLImageElement>(
+          "[data-image-popout-image]",
+        );
+        const closeButton = carousel.querySelector<HTMLButtonElement>(
+          "[data-image-popout-close]",
+        );
+        const embla = EmblaCarousel(viewport, {
+          align: "center",
+          loop: slides.length > 1,
+        });
+
+        const updateSelectedSlide = () => {
+          const activeIndex = embla.selectedScrollSnap();
+          slides.forEach((slide, slideIndex) => {
+            slide.classList.toggle("is-selected", slideIndex === activeIndex);
+          });
+
+          if (position) {
+            position.textContent = String(activeIndex + 1) + " / " + slides.length;
+          }
+        };
+
+        previousButton?.addEventListener("click", () => {
+          embla.scrollPrev();
+        });
+
+        nextButton?.addEventListener("click", () => {
+          embla.scrollNext();
+        });
+
+        embla.on("select", updateSelectedSlide).on("reInit", updateSelectedSlide);
+        updateSelectedSlide();
+
+        carousel.querySelectorAll("[data-carousel-image]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const sourceImage = button.querySelector("img");
+            if (!sourceImage || !popout || !popoutImage) return;
+
+            popoutImage.src = sourceImage.currentSrc || sourceImage.src;
+            popout.showModal();
+          });
+        });
+
+        closeButton?.addEventListener("click", () => popout?.close());
+
+        popout?.addEventListener("click", (event) => {
+          if (event.target === popout) popout.close();
+        });
+      });
+    </script>
   </body>
 </html>

@@ -35,6 +35,38 @@ const { title, description, image = FallbackImage } = Astro.props;
   href={new URL(`${SITE_BASE}/rss.xml`, Astro.site)}
 />
 <meta name="generator" content={Astro.generator} />
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const getSavedTheme = () => {
+      try {
+        const savedTheme = localStorage.getItem("theme");
+        return savedTheme === "dark" || savedTheme === "light"
+          ? savedTheme
+          : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const applyTheme = (theme) => {
+      root.classList.toggle("dark", theme === "dark");
+      root.dataset.theme = theme;
+      root.dataset.pfTheme = theme;
+      root.style.colorScheme = theme;
+    };
+
+    applyTheme(getSavedTheme() ?? (systemTheme.matches ? "dark" : "light"));
+
+    systemTheme.addEventListener("change", (event) => {
+      if (!getSavedTheme()) {
+        applyTheme(event.matches ? "dark" : "light");
+      }
+    });
+  })();
+</script>
 
 <Font cssVariable="--font-atkinson" preload />
 

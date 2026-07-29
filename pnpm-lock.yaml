@@ -44,6 +44,9 @@ importers:
       astro-pagefind:
         specifier: ^2.0.1
         version: 2.0.1(astro@7.1.4(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(typescript@6.0.3)(yaml@2.9.0))
+      embla-carousel:
+        specifier: ^8.6.0
+        version: 8.6.0
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -1756,6 +1759,9 @@ packages:
 
   electron-to-chromium@1.5.396:
     resolution: {integrity: sha512-yHiw2Y3C3H9U6TMbOfoWK/BPreiOPXRfTWPBwQBoZG6/8TB6eOPnsy5oaRYuatR7Fw2SJ4kKforgufeo7fq0EQ==}
+
+  embla-carousel@8.6.0:
+    resolution: {integrity: sha512-SjWyZBHJPbqxHOzckOfo8lHisEaJWmwd23XppYFYVh10bU66/Pn5tkVkbkCMZVdbUE5eTCI2nD8OyIP4Z+uwkA==}
 
   emmet@2.4.11:
     resolution: {integrity: sha512-23QPJB3moh/U9sT4rQzGgeyyGIrcM+GH5uVYg2C6wZIxAIJq7Ng3QLT79tl8FUwDXhyq9SusfknOrofAKqvgyQ==}
@@ -4584,6 +4590,8 @@ snapshots:
   dset@3.1.4: {}
 
   electron-to-chromium@1.5.396: {}
+
+  embla-carousel@8.6.0: {}
 
   emmet@2.4.11:
     dependencies:
