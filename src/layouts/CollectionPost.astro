@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { getImage, Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import BaseHead from "../components/BaseHead.astro";
 import Footer from "../components/Footer.astro";
@@ -17,6 +17,12 @@ const {
   subImages,
   showDate = true,
 } = Astro.props;
+
+const fullSizeSubImages = subImages
+  ? await Promise.all(
+      subImages.map(async (image) => (await getImage({ src: image })).src),
+    )
+  : [];
 ---
 
 <html lang="en">
@@ -33,13 +39,15 @@ const {
       }
       .hero-image img {
         display: block;
+        width: min(100%, 1020px);
+        height: auto;
         margin: 0 auto;
         border-radius: 12px;
         box-shadow: var(--box-shadow);
       }
       .image-carousel {
         width: 100%;
-        max-width: 1020px;
+        max-width: 760px;
         margin: 1.5rem auto 0;
       }
       .embla__viewport {
@@ -68,13 +76,18 @@ const {
       .carousel-image {
         display: block;
         width: 100%;
+        aspect-ratio: 2 / 1;
         padding: 0;
+        overflow: hidden;
         cursor: zoom-in;
         background: transparent;
         border: 0;
       }
       .carousel-image img {
+        display: block;
         width: 100%;
+        height: 100%;
+        object-fit: cover;
         border-radius: 12px;
       }
       .embla__slide.is-selected .carousel-image img {
@@ -113,21 +126,28 @@ const {
         text-align: center;
       }
       .image-popout {
-        width: min(90vw, 1400px);
+        box-sizing: border-box;
+        width: 100vw;
+        height: 100dvh;
         max-width: none;
-        max-height: 90vh;
-        padding: 0;
-        overflow: visible;
+        max-height: 100dvh;
+        margin: 0;
+        padding: 2rem;
+        overflow: hidden;
+        place-items: center;
         background: transparent;
         border: 0;
+      }
+      .image-popout[open] {
+        display: grid;
       }
       .image-popout::backdrop {
         background: rgba(0, 0, 0, 0.8);
       }
       .image-popout__close {
         position: absolute;
-        top: -0.75rem;
-        right: -0.75rem;
+        top: 0.75rem;
+        right: 0.75rem;
         z-index: 1;
         width: 2.5rem;
         height: 2.5rem;
@@ -138,9 +158,10 @@ const {
       }
       .image-popout__image {
         display: block;
-        max-width: 100%;
-        max-height: 90vh;
-        margin: 0 auto;
+        width: auto;
+        height: auto;
+        max-width: calc(100vw - 4rem);
+        max-height: calc(100dvh - 4rem);
         border-radius: 12px;
       }
       .prose {
@@ -219,12 +240,13 @@ const {
                 <div class="image-carousel" data-image-carousel>
                   <div class="embla__viewport" data-embla-viewport>
                     <div class="embla__container">
-                      {subImages.map((image) => (
+                      {subImages.map((image, index) => (
                         <div class="embla__slide" data-carousel-slide>
                           <button
                             class="carousel-image"
                             type="button"
                             data-carousel-image
+                            data-full-image={fullSizeSubImages[index]}
                             aria-label="Open larger image"
                           >
                             <Image
@@ -333,6 +355,29 @@ const {
           loop: slides.length > 1,
         });
 
+        const fitPopoutImage = () => {
+          if (!popout?.open || !popoutImage?.naturalWidth || !popoutImage.naturalHeight) {
+            return;
+          }
+
+          const popoutStyles = window.getComputedStyle(popout);
+          const availableWidth =
+            popout.clientWidth -
+            Number.parseFloat(popoutStyles.paddingLeft) -
+            Number.parseFloat(popoutStyles.paddingRight);
+          const availableHeight =
+            popout.clientHeight -
+            Number.parseFloat(popoutStyles.paddingTop) -
+            Number.parseFloat(popoutStyles.paddingBottom);
+          const scale = Math.min(
+            availableWidth / popoutImage.naturalWidth,
+            availableHeight / popoutImage.naturalHeight,
+          );
+
+          popoutImage.style.width = `${popoutImage.naturalWidth * scale}px`;
+          popoutImage.style.height = `${popoutImage.naturalHeight * scale}px`;
+        };
+
         const updateSelectedSlide = () => {
           const activeIndex = embla.selectedScrollSnap();
           slides.forEach((slide, slideIndex) => {
@@ -355,20 +400,100 @@ const {
         embla.on("select", updateSelectedSlide).on("reInit", updateSelectedSlide);
         updateSelectedSlide();
 
-        carousel.querySelectorAll("[data-carousel-image]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const sourceImage = button.querySelector("img");
-            if (!sourceImage || !popout || !popoutImage) return;
+        carousel
+          .querySelectorAll<HTMLButtonElement>("[data-carousel-image]")
+          .forEach((button) => {
+            const sourceImage = button.querySelector<HTMLImageElement>("img");
+            if (!sourceImage) return;
 
-            popoutImage.src = sourceImage.currentSrc || sourceImage.src;
-            popout.showModal();
+            const thumbnailSource = sourceImage.currentSrc || sourceImage.src;
+            const showOriginalImage = () => {
+              sourceImage.src = button.dataset.fullImage || thumbnailSource;
+            };
+            const restoreThumbnail = () => {
+              sourceImage.src = thumbnailSource;
+              sourceImage.style.removeProperty("object-position");
+            };
+
+            button.addEventListener("mouseenter", showOriginalImage);
+            button.addEventListener("mousemove", (event) => {
+              const bounds = button.getBoundingClientRect();
+              const horizontalPosition =
+                ((event.clientX - bounds.left) / bounds.width) * 100;
+              const verticalPosition =
+                ((event.clientY - bounds.top) / bounds.height) * 100;
+
+              sourceImage.style.objectPosition = `${horizontalPosition}% ${verticalPosition}%`;
+            });
+            button.addEventListener("mouseleave", restoreThumbnail);
+            button.addEventListener("focus", showOriginalImage);
+            button.addEventListener("blur", restoreThumbnail);
+
+            button.addEventListener("click", () => {
+              const slide = button.closest<HTMLElement>("[data-carousel-slide]");
+              const slideIndex = slide ? slides.indexOf(slide) : -1;
+
+              if (
+                slideIndex !== -1 &&
+                slideIndex !== embla.selectedScrollSnap()
+              ) {
+                restoreThumbnail();
+                embla.scrollTo(slideIndex);
+                return;
+              }
+
+              if (!popout || !popoutImage) return;
+
+              popoutImage.style.removeProperty("width");
+              popoutImage.style.removeProperty("height");
+              popoutImage.src =
+                button.dataset.fullImage || sourceImage.currentSrc || sourceImage.src;
+              popout.showModal();
+              fitPopoutImage();
+            });
           });
-        });
 
         closeButton?.addEventListener("click", () => popout?.close());
 
+        popoutImage?.addEventListener("load", fitPopoutImage);
+        window.addEventListener("resize", fitPopoutImage);
+
         popout?.addEventListener("click", (event) => {
-          if (event.target === popout) popout.close();
+          if (!popoutImage || event.target === popout) {
+            popout.close();
+            return;
+          }
+
+          if (event.target !== popoutImage) return;
+
+          if (!popoutImage.naturalWidth || !popoutImage.naturalHeight) {
+            popout.close();
+            return;
+          }
+
+          const imageBounds = popoutImage.getBoundingClientRect();
+          const imageAspectRatio =
+            popoutImage.naturalWidth / popoutImage.naturalHeight;
+          const boundsAspectRatio = imageBounds.width / imageBounds.height;
+          const renderedWidth =
+            imageAspectRatio > boundsAspectRatio
+              ? imageBounds.width
+              : imageBounds.height * imageAspectRatio;
+          const renderedHeight =
+            imageAspectRatio > boundsAspectRatio
+              ? imageBounds.width / imageAspectRatio
+              : imageBounds.height;
+          const renderedLeft =
+            imageBounds.left + (imageBounds.width - renderedWidth) / 2;
+          const renderedTop =
+            imageBounds.top + (imageBounds.height - renderedHeight) / 2;
+          const clickedImage =
+            event.clientX >= renderedLeft &&
+            event.clientX <= renderedLeft + renderedWidth &&
+            event.clientY >= renderedTop &&
+            event.clientY <= renderedTop + renderedHeight;
+
+          if (!clickedImage) popout.close();
         });
       });
     </script>
