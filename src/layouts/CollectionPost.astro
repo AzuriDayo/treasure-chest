@@ -64,14 +64,10 @@ const fullSizeSubImages = subImages
         min-width: 0;
         padding-left: 1rem;
         opacity: 0.45;
-        transform: scale(0.93);
-        transition:
-          opacity 0.25s ease,
-          transform 0.25s ease;
+        transition: opacity 0.25s ease;
       }
       .embla__slide.is-selected {
         opacity: 1;
-        transform: scale(1);
       }
       .carousel-image {
         display: block;
@@ -82,6 +78,11 @@ const fullSizeSubImages = subImages
         cursor: zoom-in;
         background: transparent;
         border: 0;
+        transform: scale(0.93);
+        transition: transform 0.25s ease;
+      }
+      .embla__slide.is-selected .carousel-image {
+        transform: scale(1);
       }
       .carousel-image img {
         display: block;
@@ -190,6 +191,7 @@ const fullSizeSubImages = subImages
 
       @media (prefers-reduced-motion: reduce) {
         .embla__slide,
+        .carousel-image,
         .carousel-controls button,
         .image-popout__close {
           transition: none;
@@ -209,12 +211,13 @@ const fullSizeSubImages = subImages
           flex-basis: 100%;
           padding-left: 0;
           opacity: 1;
-          transform: none;
           transition: none;
         }
 
-        .embla__slide.is-selected {
+        .carousel-image,
+        .embla__slide.is-selected .carousel-image {
           transform: none;
+          transition: none;
         }
 
         .embla__slide.is-selected .carousel-image img {
@@ -235,75 +238,74 @@ const fullSizeSubImages = subImages
             )
           }
           {
-            subImages &&
-              subImages.length > 0 && (
-                <div class="image-carousel" data-image-carousel>
-                  <div class="embla__viewport" data-embla-viewport>
-                    <div class="embla__container">
-                      {subImages.map((image, index) => (
-                        <div class="embla__slide" data-carousel-slide>
-                          <button
-                            class="carousel-image"
-                            type="button"
-                            data-carousel-image
-                            data-full-image={fullSizeSubImages[index]}
-                            aria-label="Open larger image"
-                          >
-                            <Image
-                              width={1020}
-                              height={510}
-                              src={image}
-                              alt=""
-                            />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  {
-                    subImages.length > 1 && (
-                      <div class="carousel-controls">
+            subImages && subImages.length > 0 && (
+              <div class="image-carousel" data-image-carousel>
+                <div class="embla__viewport" data-embla-viewport>
+                  <div class="embla__container">
+                    {subImages.map((image, index) => (
+                      <div class="embla__slide" data-carousel-slide>
                         <button
+                          class="carousel-image"
                           type="button"
-                          data-carousel-previous
-                          aria-label="Show previous image"
+                          data-carousel-image
+                          data-full-image={fullSizeSubImages[index]}
+                          aria-label="Open larger image"
                         >
-                          Previous
-                        </button>
-                        <span
-                          class="carousel-position"
-                          data-carousel-position
-                          aria-live="polite"
-                        >
-                          1 / {subImages.length}
-                        </span>
-                        <button
-                          type="button"
-                          data-carousel-next
-                          aria-label="Show next image"
-                        >
-                          Next
+                          <Image
+                            width={1020}
+                            src={image}
+                            alt=""
+                            widths={[320, 480, 640, 768, 1020]}
+                            sizes="(max-width: 720px) calc(100vw - 2em), 593px"
+                            priority={index === 0}
+                          />
                         </button>
                       </div>
-                    )
-                  }
-                  <dialog class="image-popout" data-image-popout>
-                    <button
-                      class="image-popout__close"
-                      type="button"
-                      data-image-popout-close
-                      aria-label="Close enlarged image"
-                    >
-                      ×
-                    </button>
-                    <img
-                      class="image-popout__image"
-                      data-image-popout-image
-                      alt="Expanded carousel image"
-                    />
-                  </dialog>
+                    ))}
+                  </div>
                 </div>
-              )
+                {subImages.length > 1 && (
+                  <div class="carousel-controls">
+                    <button
+                      type="button"
+                      data-carousel-previous
+                      aria-label="Show previous image"
+                    >
+                      Previous
+                    </button>
+                    <span
+                      class="carousel-position"
+                      data-carousel-position
+                      aria-live="polite"
+                    >
+                      1 / {subImages.length}
+                    </span>
+                    <button
+                      type="button"
+                      data-carousel-next
+                      aria-label="Show next image"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+                <dialog class="image-popout" data-image-popout>
+                  <button
+                    class="image-popout__close"
+                    type="button"
+                    data-image-popout-close
+                    aria-label="Close enlarged image"
+                  >
+                    ×
+                  </button>
+                  <img
+                    class="image-popout__image"
+                    data-image-popout-image
+                    alt="Expanded carousel image"
+                  />
+                </dialog>
+              </div>
+            )
           }
         </div>
         <div class="prose">
@@ -335,7 +337,9 @@ const fullSizeSubImages = subImages
         );
         if (!viewport) return;
 
-        const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
+        const slides = Array.from(
+          carousel.querySelectorAll("[data-carousel-slide]"),
+        );
         const position = carousel.querySelector("[data-carousel-position]");
         const previousButton = carousel.querySelector(
           "[data-carousel-previous]",
@@ -356,7 +360,11 @@ const fullSizeSubImages = subImages
         });
 
         const fitPopoutImage = () => {
-          if (!popout?.open || !popoutImage?.naturalWidth || !popoutImage.naturalHeight) {
+          if (
+            !popout?.open ||
+            !popoutImage?.naturalWidth ||
+            !popoutImage.naturalHeight
+          ) {
             return;
           }
 
@@ -385,7 +393,8 @@ const fullSizeSubImages = subImages
           });
 
           if (position) {
-            position.textContent = String(activeIndex + 1) + " / " + slides.length;
+            position.textContent =
+              String(activeIndex + 1) + " / " + slides.length;
           }
         };
 
@@ -397,7 +406,9 @@ const fullSizeSubImages = subImages
           embla.scrollNext();
         });
 
-        embla.on("select", updateSelectedSlide).on("reInit", updateSelectedSlide);
+        embla
+          .on("select", updateSelectedSlide)
+          .on("reInit", updateSelectedSlide);
         updateSelectedSlide();
 
         carousel
@@ -406,16 +417,6 @@ const fullSizeSubImages = subImages
             const sourceImage = button.querySelector<HTMLImageElement>("img");
             if (!sourceImage) return;
 
-            const thumbnailSource = sourceImage.currentSrc || sourceImage.src;
-            const showOriginalImage = () => {
-              sourceImage.src = button.dataset.fullImage || thumbnailSource;
-            };
-            const restoreThumbnail = () => {
-              sourceImage.src = thumbnailSource;
-              sourceImage.style.removeProperty("object-position");
-            };
-
-            button.addEventListener("mouseenter", showOriginalImage);
             button.addEventListener("mousemove", (event) => {
               const bounds = button.getBoundingClientRect();
               const horizontalPosition =
@@ -425,19 +426,20 @@ const fullSizeSubImages = subImages
 
               sourceImage.style.objectPosition = `${horizontalPosition}% ${verticalPosition}%`;
             });
-            button.addEventListener("mouseleave", restoreThumbnail);
-            button.addEventListener("focus", showOriginalImage);
-            button.addEventListener("blur", restoreThumbnail);
+            button.addEventListener("mouseleave", () => {
+              sourceImage.style.removeProperty("object-position");
+            });
 
             button.addEventListener("click", () => {
-              const slide = button.closest<HTMLElement>("[data-carousel-slide]");
+              const slide = button.closest<HTMLElement>(
+                "[data-carousel-slide]",
+              );
               const slideIndex = slide ? slides.indexOf(slide) : -1;
 
               if (
                 slideIndex !== -1 &&
                 slideIndex !== embla.selectedScrollSnap()
               ) {
-                restoreThumbnail();
                 embla.scrollTo(slideIndex);
                 return;
               }
@@ -447,7 +449,9 @@ const fullSizeSubImages = subImages
               popoutImage.style.removeProperty("width");
               popoutImage.style.removeProperty("height");
               popoutImage.src =
-                button.dataset.fullImage || sourceImage.currentSrc || sourceImage.src;
+                button.dataset.fullImage ||
+                sourceImage.currentSrc ||
+                sourceImage.src;
               popout.showModal();
               fitPopoutImage();
             });

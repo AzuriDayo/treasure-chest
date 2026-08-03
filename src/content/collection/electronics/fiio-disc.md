@@ -1,16 +1,14 @@
 ---
-title: "Fiio Disc"
-description: "Fiio Disc"
-pubDate: "2026-07-31"
-heroImage: "/src/content/collection/electronics/fiio-disc/product-front.jpg"
+title: Fiio Disc
+description: Fiio Disc
+pubDate: 2026-07-31
+heroImage: fiio-disc/product-front.jpg
 subImages:
-  [
-    "/src/content/collection/electronics/fiio-disc/box.jpg",
-    "/src/content/collection/electronics/fiio-disc/box-back.jpg",
-    "/src/content/collection/electronics/fiio-disc/sticker-back.jpg",
-    "/src/content/collection/electronics/fiio-disc/product-front.jpg",
-    "/src/content/collection/electronics/fiio-disc/product-back.jpg",
-  ]
+  - fiio-disc/box.jpg
+  - fiio-disc/box-back.jpg
+  - fiio-disc/sticker-back.jpg
+  - fiio-disc/product-front.jpg
+  - fiio-disc/product-back.jpg
 ---
 
 One of my more recent purchases. I enjoy using this so much.
