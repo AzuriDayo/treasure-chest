@@ -20,7 +20,11 @@ const {
 
 const fullSizeSubImages = subImages
   ? await Promise.all(
-      subImages.map(async (image) => (await getImage({ src: image })).src),
+      subImages.map(async (image) => ({
+        src: (await getImage({ src: image })).src,
+        width: image.width,
+        height: image.height,
+      })),
     )
   : [];
 ---
@@ -140,7 +144,10 @@ const fullSizeSubImages = subImages
         border: 0;
       }
       .image-popout[open] {
-        display: grid;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
       }
       .image-popout::backdrop {
         background: rgba(0, 0, 0, 0.8);
@@ -157,13 +164,78 @@ const fullSizeSubImages = subImages
         font-size: 1.5rem;
         line-height: 1;
       }
+      .image-popout__viewport {
+        flex: 1 1 0;
+        width: 100%;
+        max-width: 1020px;
+        align-self: center;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .image-popout__container {
+        display: flex;
+        height: 100%;
+        touch-action: pan-y pinch-zoom;
+      }
+      .image-popout__slide {
+        display: grid;
+        flex: 0 0 100%;
+        height: 100%;
+        min-width: 0;
+        place-items: center;
+        position: relative;
+      }
+      .image-popout__loader {
+        position: absolute;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 0.25rem solid rgba(255, 255, 255, 0.35);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: image-popout-spin 0.75s linear infinite;
+      }
+      .image-popout__slide:not(.is-loading) .image-popout__loader {
+        display: none;
+      }
       .image-popout__image {
         display: block;
         width: auto;
         height: auto;
-        max-width: calc(100vw - 4rem);
-        max-height: calc(100dvh - 4rem);
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
         border-radius: 12px;
+      }
+      @keyframes image-popout-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .image-popout__controls {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+      }
+      .image-popout__controls button {
+        min-width: 7rem;
+        padding: 0.5rem 1rem;
+        color: white;
+        cursor: pointer;
+        background: var(--accent);
+        border: 2px solid var(--accent);
+        border-radius: 999px;
+        box-shadow: 0 2px 6px rgba(var(--shadow-color), 35%);
+        transition:
+          background 0.2s ease,
+          border-color 0.2s ease,
+          transform 0.2s ease;
+      }
+      .image-popout__controls button:hover {
+        background: var(--accent-dark);
+        border-color: var(--accent-dark);
+        transform: translateY(-1px);
       }
       .prose {
         width: 720px;
@@ -193,8 +265,11 @@ const fullSizeSubImages = subImages
         .embla__slide,
         .carousel-image,
         .carousel-controls button,
-        .image-popout__close {
+        .image-popout__controls button,
+        .image-popout__close,
+        .image-popout__loader {
           transition: none;
+          animation: none;
         }
       }
 
@@ -234,7 +309,14 @@ const fullSizeSubImages = subImages
         <div class="hero-image">
           {
             heroImage && (
-              <Image width={1020} height={510} src={heroImage} alt="" />
+              <Image
+                width={1020}
+                height={510}
+                src={heroImage}
+                alt=""
+                loading="eager"
+                decoding="async"
+              />
             )
           }
           {
@@ -248,16 +330,17 @@ const fullSizeSubImages = subImages
                           class="carousel-image"
                           type="button"
                           data-carousel-image
-                          data-full-image={fullSizeSubImages[index]}
+                            data-full-image={fullSizeSubImages[index].src}
                           aria-label="Open larger image"
                         >
                           <Image
                             width={1020}
                             src={image}
-                            alt=""
-                            widths={[320, 480, 640, 768, 1020]}
-                            sizes="(max-width: 720px) calc(100vw - 2em), 593px"
-                            priority={index === 0}
+                              alt=""
+                              widths={[320, 480, 640, 768, 1020]}
+                              sizes="(max-width: 720px) calc(100vw - 2em), 593px"
+                              loading="eager"
+                              decoding="async"
                           />
                         </button>
                       </div>
@@ -298,11 +381,58 @@ const fullSizeSubImages = subImages
                   >
                     ×
                   </button>
-                  <img
-                    class="image-popout__image"
-                    data-image-popout-image
-                    alt="Expanded carousel image"
-                  />
+                  <div class="image-popout__viewport" data-popout-viewport>
+                    <div class="image-popout__container">
+                      {
+                        fullSizeSubImages.map((image) => (
+                          <div class="image-popout__slide">
+                            <div
+                              class="image-popout__loader"
+                              aria-label="Loading expanded image"
+                              role="status"
+                            ></div>
+                            <img
+                              class="image-popout__image"
+                              data-popout-image
+                              data-full-image={image.src}
+                              src={image.src}
+                              width={image.width}
+                              height={image.height}
+                              loading="eager"
+                              alt=""
+                            />
+                          </div>
+                        ))
+                      }
+                    </div>
+                  </div>
+                  {
+                    fullSizeSubImages.length > 1 && (
+                      <div class="image-popout__controls">
+                        <button
+                          type="button"
+                          data-popout-previous
+                          aria-label="Show previous expanded image"
+                        >
+                          Previous
+                        </button>
+                        <span
+                          class="carousel-position"
+                          data-popout-position
+                          aria-live="polite"
+                        >
+                          1 / {fullSizeSubImages.length}
+                        </span>
+                        <button
+                          type="button"
+                          data-popout-next
+                          aria-label="Show next expanded image"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )
+                  }
                 </dialog>
               </div>
             )
@@ -348,9 +478,17 @@ const fullSizeSubImages = subImages
         const popout = carousel.querySelector<HTMLDialogElement>(
           "[data-image-popout]",
         );
-        const popoutImage = carousel.querySelector<HTMLImageElement>(
-          "[data-image-popout-image]",
+        const popoutViewport = carousel.querySelector<HTMLElement>(
+          "[data-popout-viewport]",
         );
+        const popoutImages = Array.from(
+          carousel.querySelectorAll<HTMLImageElement>("[data-popout-image]"),
+        );
+        const popoutPosition = carousel.querySelector("[data-popout-position]");
+        const popoutPreviousButton = carousel.querySelector(
+          "[data-popout-previous]",
+        );
+        const popoutNextButton = carousel.querySelector("[data-popout-next]");
         const closeButton = carousel.querySelector<HTMLButtonElement>(
           "[data-image-popout-close]",
         );
@@ -358,32 +496,62 @@ const fullSizeSubImages = subImages
           align: "center",
           loop: slides.length > 1,
         });
+        const popoutEmbla = popoutViewport
+          ? EmblaCarousel(popoutViewport, {
+              align: "center",
+              loop: popoutImages.length > 1,
+            })
+          : undefined;
 
-        const fitPopoutImage = () => {
+        const fitPopoutImage = (image: HTMLImageElement | undefined) => {
           if (
+            !image ||
             !popout?.open ||
-            !popoutImage?.naturalWidth ||
-            !popoutImage.naturalHeight
+            !popoutViewport ||
+            !image.naturalWidth ||
+            !image.naturalHeight
           ) {
             return;
           }
 
-          const popoutStyles = window.getComputedStyle(popout);
-          const availableWidth =
-            popout.clientWidth -
-            Number.parseFloat(popoutStyles.paddingLeft) -
-            Number.parseFloat(popoutStyles.paddingRight);
-          const availableHeight =
-            popout.clientHeight -
-            Number.parseFloat(popoutStyles.paddingTop) -
-            Number.parseFloat(popoutStyles.paddingBottom);
           const scale = Math.min(
-            availableWidth / popoutImage.naturalWidth,
-            availableHeight / popoutImage.naturalHeight,
+            popoutViewport.clientWidth / image.naturalWidth,
+            popoutViewport.clientHeight / image.naturalHeight,
           );
 
-          popoutImage.style.width = `${popoutImage.naturalWidth * scale}px`;
-          popoutImage.style.height = `${popoutImage.naturalHeight * scale}px`;
+          image.style.width = `${image.naturalWidth * scale}px`;
+          image.style.height = `${image.naturalHeight * scale}px`;
+        };
+
+        const fitActivePopoutImage = () => {
+          const activeIndex = popoutEmbla?.selectedScrollSnap();
+          if (activeIndex === undefined) return;
+          fitPopoutImage(popoutImages[activeIndex]);
+        };
+
+        const updatePopoutSlide = () => {
+          if (!popoutEmbla) return;
+
+          const activeIndex = popoutEmbla.selectedScrollSnap();
+          const activeImage = popoutImages[activeIndex];
+          const activeSlide = activeImage?.closest<HTMLElement>(
+            ".image-popout__slide",
+          );
+          const fullImageSource = activeImage?.dataset.fullImage;
+          if (activeImage && fullImageSource && !activeImage.hasAttribute("src")) {
+            activeSlide?.classList.add("is-loading");
+            activeImage.src = fullImageSource;
+          }
+          requestAnimationFrame(fitActivePopoutImage);
+
+          if (popoutPosition) {
+            popoutPosition.textContent =
+              String(activeIndex + 1) + " / " + popoutImages.length;
+          }
+
+          if (popout?.open && embla.selectedScrollSnap() !== activeIndex) {
+            embla.scrollTo(activeIndex, true);
+          }
         };
 
         const updateSelectedSlide = () => {
@@ -410,6 +578,32 @@ const fullSizeSubImages = subImages
           .on("select", updateSelectedSlide)
           .on("reInit", updateSelectedSlide);
         updateSelectedSlide();
+
+        popoutEmbla
+          ?.on("select", updatePopoutSlide)
+          .on("reInit", updatePopoutSlide);
+
+        popoutPreviousButton?.addEventListener("click", () => {
+          popoutEmbla?.scrollPrev();
+        });
+
+        popoutNextButton?.addEventListener("click", () => {
+          popoutEmbla?.scrollNext();
+        });
+
+        popoutImages.forEach((image) => {
+          const hideLoader = () => {
+            image
+              .closest<HTMLElement>(".image-popout__slide")
+              ?.classList.remove("is-loading");
+          };
+          image.addEventListener("load", () => {
+            hideLoader();
+            fitPopoutImage(image);
+          });
+          image.addEventListener("error", hideLoader);
+        });
+        window.addEventListener("resize", fitActivePopoutImage);
 
         carousel
           .querySelectorAll<HTMLButtonElement>("[data-carousel-image]")
@@ -444,60 +638,31 @@ const fullSizeSubImages = subImages
                 return;
               }
 
-              if (!popout || !popoutImage) return;
+              if (!popout || !popoutEmbla) return;
 
-              popoutImage.style.removeProperty("width");
-              popoutImage.style.removeProperty("height");
-              popoutImage.src =
-                button.dataset.fullImage ||
-                sourceImage.currentSrc ||
-                sourceImage.src;
+              popoutEmbla.scrollTo(slideIndex, true);
               popout.showModal();
-              fitPopoutImage();
+              popoutEmbla.reInit();
+              updatePopoutSlide();
             });
           });
 
         closeButton?.addEventListener("click", () => popout?.close());
-
-        popoutImage?.addEventListener("load", fitPopoutImage);
-        window.addEventListener("resize", fitPopoutImage);
-
         popout?.addEventListener("click", (event) => {
-          if (!popoutImage || event.target === popout) {
-            popout.close();
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+
+          if (
+            target.closest("[data-popout-previous], [data-popout-next]") ||
+            target.closest("[data-image-popout-close]")
+          ) {
             return;
           }
 
-          if (event.target !== popoutImage) return;
+          const activeImage = popoutImages[popoutEmbla?.selectedScrollSnap() ?? 0];
+          if (target === activeImage) return;
 
-          if (!popoutImage.naturalWidth || !popoutImage.naturalHeight) {
-            popout.close();
-            return;
-          }
-
-          const imageBounds = popoutImage.getBoundingClientRect();
-          const imageAspectRatio =
-            popoutImage.naturalWidth / popoutImage.naturalHeight;
-          const boundsAspectRatio = imageBounds.width / imageBounds.height;
-          const renderedWidth =
-            imageAspectRatio > boundsAspectRatio
-              ? imageBounds.width
-              : imageBounds.height * imageAspectRatio;
-          const renderedHeight =
-            imageAspectRatio > boundsAspectRatio
-              ? imageBounds.width / imageAspectRatio
-              : imageBounds.height;
-          const renderedLeft =
-            imageBounds.left + (imageBounds.width - renderedWidth) / 2;
-          const renderedTop =
-            imageBounds.top + (imageBounds.height - renderedHeight) / 2;
-          const clickedImage =
-            event.clientX >= renderedLeft &&
-            event.clientX <= renderedLeft + renderedWidth &&
-            event.clientY >= renderedTop &&
-            event.clientY <= renderedTop + renderedHeight;
-
-          if (!clickedImage) popout.close();
+          popout.close();
         });
       });
     </script>
