@@ -10,23 +10,23 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
-    "@astrojs/mdx": "^7.0.4",
-    "@astrojs/react": "^6.0.1",
+    "@astrojs/mdx": "^7.0.8",
+    "@astrojs/react": "^6.0.6",
     "@astrojs/rss": "^4.0.19",
-    "@astrojs/sitemap": "^3.7.3",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "astro": "^7.1.4",
+    "@astrojs/sitemap": "^3.7.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "astro": "^7.3.5",
     "astro-pagefind": "^2.0.1",
     "embla-carousel": "^8.6.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "sharp": "^0.35.0"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "typescript": "^6.0.3",
-    "vite": "catalog:",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72"
+  "packageManager": "pnpm@12.6.0"
 }

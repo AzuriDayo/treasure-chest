@@ -1,5 +1,5 @@
 ---
-title: "wing zero custom "
+title: "wing zero custom"
 description: "1999 variant"
 pubDate: "2022-07-08"
 heroImage: "/src/assets/blog-placeholder-3.jpg"
